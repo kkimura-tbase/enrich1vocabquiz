@@ -4,18 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>英語クイズアプリ</title>
-    <!-- 安全性の高いCDN（Cloudflare） -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React, ReactDOM, Babel (Cloudflare CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
     <style>
-      /* 全体のスクロールを防ぎ、iPadのブラウザバーの干渉を防ぐ */
-      body {
+      /* iPadのアドレスバーやメニューバーに考慮した画面スクロール防止設定 */
+      body, html {
         margin: 0;
         padding: 0;
         overflow: hidden;
-        touch-action: none; /* ピンチズームやスワイプなどの誤作動を防止 */
+        height: 100%;
+        touch-action: none; /* ダブルタップズーム等の挙動防止 */
       }
       .btn-3d { border-bottom-width: 6px; transition: transform 0.1s, border-width 0.1s, filter 0.3s; }
       .btn-3d:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 2px; }
@@ -31,9 +33,10 @@
 </head>
 <body>
     <div id="root">
-        <div style="text-align: center; padding: 50px; font-family: sans-serif; background: #e0e7ff; height: 100dvh;">
-            <h2 style="color: #4c1d95; font-size: 24px; font-weight: bold;">🚀 アプリを読み込み中...</h2>
-            <p style="color: #4b5563; margin-top: 10px;">画面が切り替わらない場合は、コードにエラーがある可能性があります。</p>
+        <!-- ロード中の初期表示 -->
+        <div style="text-align: center; padding: 50px; font-family: sans-serif; background: #e0e7ff; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <h2 style="color: #4c1d95; font-size: 24px; font-weight: bold; margin-bottom: 10px;">🚀 アプリを読み込み中...</h2>
+            <p style="color: #4b5563;">画面が切り替わらない場合は、コードにエラーがある可能性があります。</p>
             <pre id="error-log" style="color: #dc2626; text-align: left; background: #fee2e2; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; font-size: 14px; display: none;"></pre>
         </div>
     </div>
@@ -52,7 +55,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // アイコン群
+        // SVGアイコン群
         const Timer = (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="14" r="8"/><path d="M12 2v4"/><path d="M12 14 9.5 11.5"/><path d="M15 2h-6"/></svg>;
         const Trophy = (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
         const Target = (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
@@ -175,6 +178,7 @@
 
             return (
                 <div className="h-[100dvh] flex flex-col font-sans bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 text-gray-800 overflow-hidden">
+                    {/* 上部タイトルバー */}
                     <div className="bg-white/30 backdrop-blur-md border-b border-white/50 text-purple-900 p-2 md:p-3 text-center font-black text-xl md:text-2xl shadow-sm z-10 tracking-widest uppercase flex items-center justify-center shrink-0">
                         <BookOpen className="mr-2 w-6 h-6" /> Word Master
                     </div>
@@ -189,7 +193,7 @@
                         )}
                         
                         {gameState === 'menu' && (
-                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-4 md:space-y-6 animate-fade-in">
+                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-4 md:space-y-6">
                                 <div className="text-center mb-2">
                                     <h2 className="text-3xl md:text-4xl font-black text-purple-900 drop-shadow-sm">学習設定</h2>
                                     <p className="text-purple-800 text-base md:text-lg mt-1 font-bold">範囲と出題形式を選んでスタート！</p>
@@ -277,29 +281,25 @@
                             </div>
                         )}
 
-                        {/* リザルト画面: 各要素のサイズを小さくし、1画面に確実に収めるように調整 */}
+                        {/* リザルト画面: 上部の見切れ要素(Timeupメッセージ)を排除し、完全な1画面100dvhに最適化 */}
                         {gameState === 'result' && (
-                            // 万が一収まらない場合に備えて overflow-y-auto を追加し、パディングを調整
-                            <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-6 text-center max-w-4xl mx-auto w-full animate-fade-in overflow-y-auto py-2">
-                                <div className="shrink-0">
-                                    <h2 className="text-4xl md:text-5xl font-black text-purple-900 mb-1 md:mb-2 tracking-tight drop-shadow-md">TIME UP! 🏁</h2>
-                                    <p className="text-purple-800 text-lg md:text-xl font-bold">お疲れ様でした！</p>
-                                </div>
-                                <div className="glass-panel w-full p-4 md:p-8 rounded-[2rem] border border-white/60 shadow-xl shrink-0">
+                            <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-6 text-center max-w-4xl mx-auto w-full overflow-hidden py-2">
+                                <div className="glass-panel w-full p-4 md:p-6 rounded-[2rem] border border-white/60 shadow-xl shrink-0">
                                     <div className="text-base md:text-lg text-purple-900/70 font-black mb-1 uppercase tracking-widest">Score (1分間換算)</div>
-                                    <div className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 mb-6 md:mb-8 drop-shadow-sm filter">{finalScore}</div>
-                                    <div className="grid grid-cols-2 gap-3 md:gap-6 text-left">
-                                        <div className="bg-white/70 p-3 md:p-5 rounded-2xl border-2 border-green-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm">
-                                            <span className="text-green-700 text-base md:text-lg font-black mb-1 flex items-center"><Target className="w-5 h-5 mr-1"/> 正解数</span>
-                                            <span className="font-black text-gray-800 text-3xl md:text-4xl">{score.correct}<span className="text-lg ml-1 text-gray-500">問</span></span>
+                                    <div className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 mb-4 md:mb-6 drop-shadow-sm filter">{finalScore}</div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 md:gap-4 text-left">
+                                        <div className="bg-white/70 p-3 md:p-4 rounded-2xl border-2 border-green-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm">
+                                            <span className="text-green-700 text-sm md:text-base font-black mb-1 flex items-center"><Target className="w-5 h-5 mr-1"/> 正解数</span>
+                                            <span className="font-black text-gray-800 text-2xl md:text-3xl">{score.correct}<span className="text-sm ml-1 text-gray-500">問</span></span>
                                         </div>
-                                        <div className="bg-white/70 p-3 md:p-5 rounded-2xl border-2 border-red-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm">
-                                            <span className="text-red-600 text-base md:text-lg font-black mb-1 flex items-center"><AlertCircle className="w-5 h-5 mr-1"/> ミス回数</span>
-                                            <span className="font-black text-gray-800 text-3xl md:text-4xl">{score.wrong}<span className="text-lg ml-1 text-gray-500">回</span></span>
+                                        <div className="bg-white/70 p-3 md:p-4 rounded-2xl border-2 border-red-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm">
+                                            <span className="text-red-600 text-sm md:text-base font-black mb-1 flex items-center"><AlertCircle className="w-5 h-5 mr-1"/> ミス回数</span>
+                                            <span className="font-black text-gray-800 text-2xl md:text-3xl">{score.wrong}<span className="text-sm ml-1 text-gray-500">回</span></span>
                                         </div>
-                                        <div className="bg-white/70 p-3 md:p-5 rounded-2xl border-2 border-blue-200/80 flex flex-col items-center justify-center col-span-2 shadow-sm">
-                                            <span className="text-blue-600 text-base md:text-lg font-black mb-1 uppercase tracking-wider">Accuracy</span>
-                                            <span className="font-black text-blue-600 text-4xl md:text-5xl">{accuracy}<span className="text-2xl ml-1">%</span></span>
+                                        <div className="bg-white/70 p-3 md:p-4 rounded-2xl border-2 border-blue-200/80 flex flex-col items-center justify-center col-span-2 shadow-sm">
+                                            <span className="text-blue-600 text-sm md:text-base font-black mb-1 uppercase tracking-wider">Accuracy</span>
+                                            <span className="font-black text-blue-600 text-3xl md:text-4xl">{accuracy}<span className="text-xl ml-1">%</span></span>
                                         </div>
                                     </div>
                                 </div>
