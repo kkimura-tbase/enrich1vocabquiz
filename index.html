@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>英語クイズアプリ</title>
     <!-- 安全性の高いCDN（Cloudflare） -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,21 +10,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
     <style>
-      .btn-3d { border-bottom-width: 8px; transition: transform 0.1s, border-width 0.1s, filter 0.3s; }
-      .btn-3d:active:not(:disabled) { transform: translateY(6px); border-bottom-width: 2px; }
+      /* 全体のスクロールを防ぎ、iPadのブラウザバーの干渉を防ぐ */
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        touch-action: none; /* ピンチズームやスワイプなどの誤作動を防止 */
+      }
+      .btn-3d { border-bottom-width: 6px; transition: transform 0.1s, border-width 0.1s, filter 0.3s; }
+      .btn-3d:active:not(:disabled) { transform: translateY(4px); border-bottom-width: 2px; }
       .btn-wrong { opacity: 0.4; transform: scale(0.96); filter: grayscale(80%); pointer-events: none; }
       .btn-correct { animation: correct-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; z-index: 10; }
       @keyframes correct-pop {
         0% { transform: scale(1); }
-        50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 255, 255, 0.8); }
-        100% { transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); border-bottom-width: 8px; }
+        50% { transform: scale(1.03); box-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
+        100% { transform: scale(1.01); box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); border-bottom-width: 6px; }
       }
       .glass-panel { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
     </style>
 </head>
 <body>
     <div id="root">
-        <div style="text-align: center; padding: 50px; font-family: sans-serif; background: #e0e7ff; min-height: 100vh;">
+        <div style="text-align: center; padding: 50px; font-family: sans-serif; background: #e0e7ff; height: 100dvh;">
             <h2 style="color: #4c1d95; font-size: 24px; font-weight: bold;">🚀 アプリを読み込み中...</h2>
             <p style="color: #4b5563; margin-top: 10px;">画面が切り替わらない場合は、コードにエラーがある可能性があります。</p>
             <pre id="error-log" style="color: #dc2626; text-align: left; background: #fee2e2; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; font-size: 14px; display: none;"></pre>
@@ -67,8 +74,6 @@
         ];
 
         const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
-        
-        // ① 制限時間を「問題数 × 3秒」に変更
         const calculateTimeLimit = (q) => q * 3;
 
         const App = () => {
@@ -169,92 +174,95 @@
             const finalScore = totalTime > 0 ? Math.max(0, Math.round(((score.correct * 100) - (score.wrong * 50)) * (60 / totalTime))) : 0;
 
             return (
-                <div className="min-h-screen flex flex-col font-sans bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 text-gray-800">
-                    <div className="bg-white/30 backdrop-blur-md border-b border-white/50 text-purple-900 p-4 md:p-6 text-center font-black text-3xl md:text-4xl shadow-sm z-10 tracking-widest uppercase flex items-center justify-center">
-                        <BookOpen className="mr-3 w-8 h-8" /> Word Master
+                // ① h-[100dvh] と overflow-hidden でスクロールを完全に禁止し、1画面に収める
+                <div className="h-[100dvh] flex flex-col font-sans bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 text-gray-800 overflow-hidden">
+                    <div className="bg-white/30 backdrop-blur-md border-b border-white/50 text-purple-900 p-2 md:p-3 text-center font-black text-xl md:text-2xl shadow-sm z-10 tracking-widest uppercase flex items-center justify-center shrink-0">
+                        <BookOpen className="mr-2 w-6 h-6" /> Word Master
                     </div>
-                    <div className="flex-1 p-4 md:p-8 flex flex-col relative overflow-y-auto max-w-6xl mx-auto w-full">
+                    
+                    {/* ② パディングを減らし、中身を詰める */}
+                    <div className="flex-1 p-3 md:p-4 flex flex-col relative overflow-hidden max-w-6xl mx-auto w-full">
                         
                         {gameState === 'loading' && (
-                            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-                                <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                                <div className="text-2xl font-bold text-purple-800">データを読み込み中...</div>
+                            <div className="flex-1 flex flex-col items-center justify-center space-y-3">
+                                <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="text-xl font-bold text-purple-800">データを読み込み中...</div>
                             </div>
                         )}
                         
                         {gameState === 'menu' && (
-                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-8 animate-fade-in">
-                                <div className="text-center mb-4">
-                                    <h2 className="text-4xl md:text-5xl font-black text-purple-900 drop-shadow-sm">学習設定</h2>
-                                    <p className="text-purple-800 text-xl mt-3 font-bold">範囲と出題形式を選んでスタート！</p>
+                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-4 md:space-y-6 animate-fade-in">
+                                <div className="text-center mb-2">
+                                    <h2 className="text-3xl md:text-4xl font-black text-purple-900 drop-shadow-sm">学習設定</h2>
+                                    <p className="text-purple-800 text-base md:text-lg mt-1 font-bold">範囲と出題形式を選んでスタート！</p>
                                 </div>
 
                                 {errorMsg && (
-                                    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-xl shadow-md font-bold text-sm md:text-base flex items-start">
-                                        <AlertCircle className="w-6 h-6 mr-2 flex-shrink-0" />
+                                    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-xl shadow-md font-bold text-sm flex items-start">
+                                        <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
                                         <p>{errorMsg}</p>
                                     </div>
                                 )}
 
-                                <div className="space-y-6 glass-panel p-6 md:p-10 rounded-[2rem] shadow-xl border border-white/60">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                        <div className="space-y-2">
-                                            <label className="block text-xl font-bold text-gray-700">Unit (大単元)</label>
-                                            <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} className="w-full p-4 text-xl font-bold border-2 border-white/80 rounded-2xl bg-white/60 focus:ring-4 focus:ring-purple-200 focus:border-purple-400 outline-none cursor-pointer">
+                                <div className="space-y-4 glass-panel p-5 md:p-8 rounded-[1.5rem] shadow-xl border border-white/60">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
+                                        <div className="space-y-1">
+                                            <label className="block text-base md:text-lg font-bold text-gray-700">Unit (大単元)</label>
+                                            <select value={selectedUnit} onChange={(e) => setSelectedUnit(e.target.value)} className="w-full p-3 text-lg font-bold border-2 border-white/80 rounded-xl bg-white/60 focus:ring-4 focus:ring-purple-200 focus:border-purple-400 outline-none cursor-pointer">
                                                 {units.map(u => <option key={u} value={u}>{u}</option>)}
                                             </select>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="block text-xl font-bold text-gray-700">パート (小単元)</label>
-                                            <select value={selectedPart} onChange={(e) => setSelectedPart(e.target.value)} disabled={partsInUnit.length === 0} className="w-full p-4 text-xl font-bold border-2 border-white/80 rounded-2xl bg-white/60 focus:ring-4 focus:ring-purple-200 focus:border-purple-400 outline-none cursor-pointer disabled:opacity-50">
+                                        <div className="space-y-1">
+                                            <label className="block text-base md:text-lg font-bold text-gray-700">パート (小単元)</label>
+                                            <select value={selectedPart} onChange={(e) => setSelectedPart(e.target.value)} disabled={partsInUnit.length === 0} className="w-full p-3 text-lg font-bold border-2 border-white/80 rounded-xl bg-white/60 focus:ring-4 focus:ring-purple-200 focus:border-purple-400 outline-none cursor-pointer disabled:opacity-50">
                                                 {partsInUnit.map(p => <option key={p} value={p}>{p}</option>)}
                                             </select>
                                         </div>
                                     </div>
-                                    <div className="space-y-3 pt-6 border-t border-purple-200/50">
-                                        <label className="block text-xl font-bold text-gray-700">出題形式</label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                                            <button onClick={() => setMode('ja-en')} className={`p-4 md:p-5 rounded-2xl border-4 font-black text-lg md:text-xl transition-all ${mode === 'ja-en' ? 'border-purple-400 bg-purple-100/80 text-purple-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80 hover:border-gray-200'}`}><div className="text-sm font-bold opacity-70 mb-1">日本語の意味から</div>英単語を当てる</button>
-                                            <button onClick={() => setMode('en-ja')} className={`p-4 md:p-5 rounded-2xl border-4 font-black text-lg md:text-xl transition-all ${mode === 'en-ja' ? 'border-purple-400 bg-purple-100/80 text-purple-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80 hover:border-gray-200'}`}><div className="text-sm font-bold opacity-70 mb-1">英単語から</div>日本語を当てる</button>
-                                            <button onClick={() => setMode('def-en')} className={`p-4 md:p-5 rounded-2xl border-4 font-black text-lg md:text-xl transition-all ${mode === 'def-en' ? 'border-emerald-400 bg-emerald-100/80 text-emerald-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80 hover:border-gray-200'}`}><div className="text-sm font-bold opacity-70 mb-1">英英定義から</div>英単語を当てる</button>
+                                    <div className="space-y-2 pt-4 border-t border-purple-200/50">
+                                        <label className="block text-base md:text-lg font-bold text-gray-700">出題形式</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
+                                            <button onClick={() => setMode('ja-en')} className={`p-3 md:p-4 rounded-xl border-2 md:border-4 font-black text-base md:text-lg transition-all ${mode === 'ja-en' ? 'border-purple-400 bg-purple-100/80 text-purple-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80'}`}><div className="text-xs md:text-sm font-bold opacity-70 mb-1">日本語の意味から</div>英単語</button>
+                                            <button onClick={() => setMode('en-ja')} className={`p-3 md:p-4 rounded-xl border-2 md:border-4 font-black text-base md:text-lg transition-all ${mode === 'en-ja' ? 'border-purple-400 bg-purple-100/80 text-purple-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80'}`}><div className="text-xs md:text-sm font-bold opacity-70 mb-1">英単語から</div>日本語</button>
+                                            <button onClick={() => setMode('def-en')} className={`p-3 md:p-4 rounded-xl border-2 md:border-4 font-black text-base md:text-lg transition-all ${mode === 'def-en' ? 'border-emerald-400 bg-emerald-100/80 text-emerald-800 shadow-md transform scale-[1.02]' : 'border-white/80 bg-white/50 text-gray-600 hover:bg-white/80'}`}><div className="text-xs md:text-sm font-bold opacity-70 mb-1">英英定義から</div>英単語</button>
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={startGame} className="w-full mt-8 bg-gradient-to-b from-yellow-300 to-orange-400 hover:brightness-110 text-white font-black text-3xl py-6 rounded-[2rem] shadow-xl btn-3d border-orange-500 tracking-wider text-shadow">スタート！ 🚀</button>
+                                <button onClick={startGame} className="w-full mt-4 md:mt-6 bg-gradient-to-b from-yellow-300 to-orange-400 hover:brightness-110 text-white font-black text-2xl md:text-3xl py-4 md:py-5 rounded-[1.5rem] shadow-xl btn-3d border-orange-500 tracking-wider text-shadow shrink-0">スタート！ 🚀</button>
                             </div>
                         )}
 
                         {gameState === 'playing' && currentQuestion && (
-                            <div className="flex-1 flex flex-col w-full h-full">
-                                <div className="flex justify-between items-center mb-4 md:mb-6 glass-panel p-4 md:p-5 rounded-3xl shadow-md border border-white/60">
-                                    <div className="text-purple-800 font-black bg-purple-200/50 px-6 py-2.5 rounded-2xl text-xl md:text-2xl shadow-sm border border-purple-200/50 flex items-center"><Trophy className="w-6 h-6 mr-2 text-purple-600" /> {score.correct}</div>
-                                    <div className={`font-black text-2xl md:text-3xl flex items-center px-6 py-2.5 rounded-2xl shadow-sm border ${timeLeft <= 10 ? 'bg-red-400/90 text-white border-red-500 animate-pulse' : 'bg-white/60 text-gray-800 border-white/80'}`}><Timer className="w-7 h-7 mr-2" /> {timeLeft}</div>
+                            <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
+                                <div className="flex justify-between items-center mb-3 md:mb-4 glass-panel p-3 md:p-4 rounded-2xl shadow-sm border border-white/60 shrink-0">
+                                    <div className="text-purple-800 font-black bg-purple-200/50 px-4 py-2 rounded-xl text-lg md:text-xl shadow-sm border border-purple-200/50 flex items-center"><Trophy className="w-5 h-5 mr-2 text-purple-600" /> {score.correct}</div>
+                                    <div className={`font-black text-xl md:text-2xl flex items-center px-4 py-2 rounded-xl shadow-sm border ${timeLeft <= 10 ? 'bg-red-400/90 text-white border-red-500 animate-pulse' : 'bg-white/60 text-gray-800 border-white/80'}`}><Timer className="w-6 h-6 mr-2" /> {timeLeft}</div>
                                 </div>
                                 
-                                <div className="flex-1 flex flex-col items-center justify-center mb-4 md:mb-6 glass-panel rounded-[2.5rem] shadow-xl border border-white/60 p-6 md:p-12 min-h-[160px] md:min-h-[200px]">
-                                    {mode !== 'def-en' && <div className="text-base md:text-lg text-purple-700 font-black mb-4 bg-purple-200/60 px-5 py-1.5 rounded-full border border-purple-300/50 shadow-sm">{currentQuestion.answerWord.pos}</div>}
-                                    {mode === 'ja-en' && <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.ja}</h2>}
-                                    {mode === 'en-ja' && <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.en}</h2>}
-                                    {mode === 'def-en' && <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 text-center break-words w-full leading-relaxed drop-shadow-sm">"{currentQuestion.answerWord.definition}"</h2>}
+                                {/* 縦幅を圧縮した問題エリア */}
+                                <div className="flex flex-col items-center justify-center mb-3 md:mb-4 glass-panel rounded-[1.5rem] shadow-md border border-white/60 p-4 md:p-6 min-h-[100px] md:min-h-[140px] shrink-0">
+                                    {mode !== 'def-en' && <div className="text-sm md:text-base text-purple-700 font-black mb-2 md:mb-3 bg-purple-200/60 px-4 py-1 rounded-full border border-purple-300/50 shadow-sm">{currentQuestion.answerWord.pos}</div>}
+                                    {mode === 'ja-en' && <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.ja}</h2>}
+                                    {mode === 'en-ja' && <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.en}</h2>}
+                                    {mode === 'def-en' && <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 text-center break-words w-full leading-snug drop-shadow-sm">"{currentQuestion.answerWord.definition}"</h2>}
                                 </div>
                                 
-                                {/* ② 選択肢エリア: ボタンの高さを揃え、文字数でフォントサイズを動的に変更 */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-auto w-full flex-1 min-h-[200px] md:min-h-[300px]">
+                                {/* 選択肢エリア: 画面の残りをすべて使う */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-auto w-full flex-1">
                                     {currentQuestion.options.map((option, idx) => {
                                         const c = OPTION_COLORS[idx % 4];
                                         const optionText = mode === 'en-ja' ? option.ja : option.en;
                                         
-                                        // 文字数に応じてフォントサイズを可変にするロジック
-                                        let textSizeClass = "text-3xl sm:text-4xl md:text-5xl"; // デフォルト（短い場合）
+                                        let textSizeClass = "text-2xl sm:text-3xl md:text-4xl"; 
                                         if (optionText.length >= 25) {
-                                            textSizeClass = "text-lg sm:text-xl md:text-2xl lg:text-3xl leading-tight";
+                                            textSizeClass = "text-base sm:text-lg md:text-xl lg:text-2xl leading-tight";
                                         } else if (optionText.length >= 15) {
-                                            textSizeClass = "text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight";
+                                            textSizeClass = "text-lg sm:text-xl md:text-2xl lg:text-3xl leading-tight";
                                         } else if (optionText.length >= 8) {
-                                            textSizeClass = "text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight";
+                                            textSizeClass = "text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight";
                                         }
 
-                                        let btnClass = `relative w-full h-full p-4 md:p-8 rounded-[2rem] font-black ${textSizeClass} flex items-center justify-center break-words text-white shadow-lg btn-3d ${c.bg} ${c.border} `;
+                                        let btnClass = `relative w-full h-full p-3 md:p-6 rounded-[1.5rem] font-black ${textSizeClass} flex items-center justify-center break-words text-white shadow-md btn-3d ${c.bg} ${c.border} `;
                                         if (isTransitioning) {
                                             if (option.en === currentQuestion.answerWord.en) btnClass += " btn-correct ring-4 ring-white ring-offset-4 ring-offset-transparent";
                                             else btnClass += " btn-wrong";
@@ -274,18 +282,18 @@
                         )}
 
                         {gameState === 'result' && (
-                            <div className="flex-1 flex flex-col items-center justify-center space-y-8 text-center max-w-4xl mx-auto w-full">
-                                <div><h2 className="text-6xl md:text-7xl font-black text-purple-900 mb-4 tracking-tight drop-shadow-md">TIME UP! 🏁</h2><p className="text-purple-800 text-2xl md:text-3xl font-bold">お疲れ様でした！</p></div>
-                                <div className="glass-panel w-full p-8 md:p-14 rounded-[3rem] border border-white/60 shadow-xl">
-                                    <div className="text-xl md:text-2xl text-purple-900/70 font-black mb-2 uppercase tracking-widest">Score (1分間換算)</div>
-                                    <div className="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 mb-12 drop-shadow-sm filter">{finalScore}</div>
-                                    <div className="grid grid-cols-2 gap-4 md:gap-8 text-left">
-                                        <div className="bg-white/70 p-6 md:p-8 rounded-3xl border-2 border-green-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm backdrop-blur-sm"><span className="text-green-700 text-xl font-black mb-2 flex items-center"><Target className="w-6 h-6 mr-2"/> 正解数</span><span className="font-black text-gray-800 text-5xl md:text-6xl">{score.correct}<span className="text-2xl ml-2 text-gray-500">問</span></span></div>
-                                        <div className="bg-white/70 p-6 md:p-8 rounded-3xl border-2 border-red-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm backdrop-blur-sm"><span className="text-red-600 text-xl font-black mb-2 flex items-center"><AlertCircle className="w-6 h-6 mr-2"/> ミス回数</span><span className="font-black text-gray-800 text-5xl md:text-6xl">{score.wrong}<span className="text-2xl ml-2 text-gray-500">回</span></span></div>
-                                        <div className="bg-white/70 p-6 md:p-8 rounded-3xl border-2 border-blue-200/80 flex flex-col items-center justify-center col-span-2 shadow-sm backdrop-blur-sm"><span className="text-blue-600 text-xl font-black mb-2 uppercase tracking-wider">Accuracy</span><span className="font-black text-blue-600 text-6xl md:text-7xl">{accuracy}<span className="text-4xl ml-2">%</span></span></div>
+                            <div className="flex-1 flex flex-col items-center justify-center space-y-6 md:space-y-8 text-center max-w-4xl mx-auto w-full animate-fade-in">
+                                <div><h2 className="text-5xl md:text-6xl font-black text-purple-900 mb-2 md:mb-4 tracking-tight drop-shadow-md">TIME UP! 🏁</h2><p className="text-purple-800 text-xl md:text-2xl font-bold">お疲れ様でした！</p></div>
+                                <div className="glass-panel w-full p-6 md:p-10 rounded-[2rem] border border-white/60 shadow-xl">
+                                    <div className="text-lg md:text-xl text-purple-900/70 font-black mb-1 md:mb-2 uppercase tracking-widest">Score (1分間換算)</div>
+                                    <div className="text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 mb-8 md:mb-10 drop-shadow-sm filter">{finalScore}</div>
+                                    <div className="grid grid-cols-2 gap-3 md:gap-6 text-left">
+                                        <div className="bg-white/70 p-4 md:p-6 rounded-2xl border-2 border-green-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm"><span className="text-green-700 text-lg md:text-xl font-black mb-1 md:mb-2 flex items-center"><Target className="w-5 h-5 mr-2"/> 正解数</span><span className="font-black text-gray-800 text-4xl md:text-5xl">{score.correct}<span className="text-xl ml-2 text-gray-500">問</span></span></div>
+                                        <div className="bg-white/70 p-4 md:p-6 rounded-2xl border-2 border-red-200/80 flex flex-col items-center justify-center col-span-2 sm:col-span-1 shadow-sm"><span className="text-red-600 text-lg md:text-xl font-black mb-1 md:mb-2 flex items-center"><AlertCircle className="w-5 h-5 mr-2"/> ミス回数</span><span className="font-black text-gray-800 text-4xl md:text-5xl">{score.wrong}<span className="text-xl ml-2 text-gray-500">回</span></span></div>
+                                        <div className="bg-white/70 p-4 md:p-6 rounded-2xl border-2 border-blue-200/80 flex flex-col items-center justify-center col-span-2 shadow-sm"><span className="text-blue-600 text-lg md:text-xl font-black mb-1 md:mb-2 uppercase tracking-wider">Accuracy</span><span className="font-black text-blue-600 text-5xl md:text-6xl">{accuracy}<span className="text-3xl ml-2">%</span></span></div>
                                     </div>
                                 </div>
-                                <button onClick={() => { setErrorMsg(""); setGameState('menu'); }} className="w-full mt-10 bg-purple-900 hover:bg-purple-800 text-white font-black text-2xl md:text-3xl py-6 md:py-8 rounded-[2rem] shadow-xl btn-3d border-purple-950 tracking-wider transition-all">メニューに戻る ↩️</button>
+                                <button onClick={() => { setErrorMsg(""); setGameState('menu'); }} className="w-full mt-6 md:mt-8 bg-purple-900 hover:bg-purple-800 text-white font-black text-xl md:text-2xl py-4 md:py-6 rounded-[1.5rem] shadow-xl btn-3d border-purple-950 tracking-wider transition-all shrink-0">メニューに戻る ↩️</button>
                             </div>
                         )}
                     </div>
