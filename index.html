@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>英語クイズアプリ</title>
-    <!-- 安全性の高いCDN（Cloudflare）に変更、crossorigin属性を削除 -->
+    <!-- 安全性の高いCDN（Cloudflare） -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -24,16 +24,14 @@
 </head>
 <body>
     <div id="root">
-        <!-- プログラムが起動するまでのプレースホルダー / エラー表示領域 -->
         <div style="text-align: center; padding: 50px; font-family: sans-serif; background: #e0e7ff; min-height: 100vh;">
             <h2 style="color: #4c1d95; font-size: 24px; font-weight: bold;">🚀 アプリを読み込み中...</h2>
-            <p style="color: #4b5563; margin-top: 10px;">画面が切り替わらない場合は、ブラウザの設定でスクリプトがブロックされているか、<br>コードにエラーがある可能性があります。</p>
+            <p style="color: #4b5563; margin-top: 10px;">画面が切り替わらない場合は、コードにエラーがある可能性があります。</p>
             <pre id="error-log" style="color: #dc2626; text-align: left; background: #fee2e2; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; font-size: 14px; display: none;"></pre>
         </div>
     </div>
 
     <script>
-        // エラーを画面に表示するための仕組み（真っ白になるのを防ぐ）
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             var log = document.getElementById('error-log');
             if(log) {
@@ -69,7 +67,9 @@
         ];
 
         const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
-        const calculateTimeLimit = (q) => q <= 10 ? 45 : q <= 20 ? 60 : q <= 30 ? 75 : 90;
+        
+        // ① 制限時間を「問題数 × 3秒」に変更
+        const calculateTimeLimit = (q) => q * 3;
 
         const App = () => {
             const [gameState, setGameState] = useState('loading');
@@ -183,7 +183,7 @@
                         )}
                         
                         {gameState === 'menu' && (
-                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-8">
+                            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full space-y-8 animate-fade-in">
                                 <div className="text-center mb-4">
                                     <h2 className="text-4xl md:text-5xl font-black text-purple-900 drop-shadow-sm">学習設定</h2>
                                     <p className="text-purple-800 text-xl mt-3 font-bold">範囲と出題形式を選んでスタート！</p>
@@ -230,16 +230,31 @@
                                     <div className="text-purple-800 font-black bg-purple-200/50 px-6 py-2.5 rounded-2xl text-xl md:text-2xl shadow-sm border border-purple-200/50 flex items-center"><Trophy className="w-6 h-6 mr-2 text-purple-600" /> {score.correct}</div>
                                     <div className={`font-black text-2xl md:text-3xl flex items-center px-6 py-2.5 rounded-2xl shadow-sm border ${timeLeft <= 10 ? 'bg-red-400/90 text-white border-red-500 animate-pulse' : 'bg-white/60 text-gray-800 border-white/80'}`}><Timer className="w-7 h-7 mr-2" /> {timeLeft}</div>
                                 </div>
-                                <div className="flex-1 flex flex-col items-center justify-center mb-6 glass-panel rounded-[2.5rem] shadow-xl border border-white/60 p-6 md:p-12 min-h-[200px]">
+                                
+                                <div className="flex-1 flex flex-col items-center justify-center mb-4 md:mb-6 glass-panel rounded-[2.5rem] shadow-xl border border-white/60 p-6 md:p-12 min-h-[160px] md:min-h-[200px]">
                                     {mode !== 'def-en' && <div className="text-base md:text-lg text-purple-700 font-black mb-4 bg-purple-200/60 px-5 py-1.5 rounded-full border border-purple-300/50 shadow-sm">{currentQuestion.answerWord.pos}</div>}
                                     {mode === 'ja-en' && <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.ja}</h2>}
                                     {mode === 'en-ja' && <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-gray-800 text-center break-words w-full tracking-tight drop-shadow-sm">{currentQuestion.answerWord.en}</h2>}
                                     {mode === 'def-en' && <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 text-center break-words w-full leading-relaxed drop-shadow-sm">"{currentQuestion.answerWord.definition}"</h2>}
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-auto">
+                                
+                                {/* ② 選択肢エリア: ボタンの高さを揃え、文字数でフォントサイズを動的に変更 */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-auto w-full flex-1 min-h-[200px] md:min-h-[300px]">
                                     {currentQuestion.options.map((option, idx) => {
                                         const c = OPTION_COLORS[idx % 4];
-                                        let btnClass = `relative w-full p-6 md:p-10 rounded-[2rem] font-black text-2xl sm:text-3xl md:text-5xl flex items-center justify-center break-words text-white shadow-lg btn-3d ${c.bg} ${c.border} `;
+                                        const optionText = mode === 'en-ja' ? option.ja : option.en;
+                                        
+                                        // 文字数に応じてフォントサイズを可変にするロジック
+                                        let textSizeClass = "text-3xl sm:text-4xl md:text-5xl"; // デフォルト（短い場合）
+                                        if (optionText.length >= 25) {
+                                            textSizeClass = "text-lg sm:text-xl md:text-2xl lg:text-3xl leading-tight";
+                                        } else if (optionText.length >= 15) {
+                                            textSizeClass = "text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight";
+                                        } else if (optionText.length >= 8) {
+                                            textSizeClass = "text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight";
+                                        }
+
+                                        let btnClass = `relative w-full h-full p-4 md:p-8 rounded-[2rem] font-black ${textSizeClass} flex items-center justify-center break-words text-white shadow-lg btn-3d ${c.bg} ${c.border} `;
                                         if (isTransitioning) {
                                             if (option.en === currentQuestion.answerWord.en) btnClass += " btn-correct ring-4 ring-white ring-offset-4 ring-offset-transparent";
                                             else btnClass += " btn-wrong";
@@ -248,7 +263,11 @@
                                         } else {
                                             btnClass += " hover:brightness-110";
                                         }
-                                        return <button key={idx} onClick={() => handleAnswer(option)} disabled={isTransitioning || selectedWrongOptions.some(o => o.en === option.en)} className={btnClass}><span className="drop-shadow-md">{mode === 'en-ja' ? option.ja : option.en}</span></button>;
+                                        return (
+                                            <button key={idx} onClick={() => handleAnswer(option)} disabled={isTransitioning || selectedWrongOptions.some(o => o.en === option.en)} className={btnClass}>
+                                                <span className="drop-shadow-md">{optionText}</span>
+                                            </button>
+                                        );
                                     })}
                                 </div>
                             </div>
